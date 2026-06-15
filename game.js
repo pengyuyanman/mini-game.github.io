@@ -88,6 +88,8 @@ burstFireAudio.loop = true;
 burstFireAudio.volume = 0.88;
 
 let bgmUnlocked = false;
+let assetsReady = false;
+const startPanelText = "用方向键或 WASD 控制飞船，拾取紫色子弹后按 E 连续发射。障碍 1 扣 10 血，障碍 2 扣 25 血，爱心回复 20 血。";
 
 const state = {
   running: false,
@@ -159,7 +161,48 @@ const state = {
 };
 
 bestEl.textContent = state.best;
-showOverlay("Survival Run", "准备起飞", "用方向键或 WASD 控制飞船，拾取紫色子弹后按 E 连续发射。障碍 1 扣 10 血，障碍 2 扣 25 血，爱心回复 20 血。", "开始游戏");
+showOverlay("Survival Run", "准备起飞", startPanelText, "加载中...");
+actionButton.disabled = true;
+preloadAssets().then(() => {
+  assetsReady = true;
+  if (!state.running) {
+    actionButton.disabled = false;
+    actionButton.textContent = "开始游戏";
+    panelText.textContent = startPanelText;
+  }
+});
+
+function preloadAssets() {
+  const imageLoads = [playerImage, rockImage, dasherImage, spinnerImage, bossImage].map(waitForImageLoad);
+  const audioLoads = [rockHitAudio, dashHitAudio, bgmAudio, burstFireAudio].map(waitForAudioLoad);
+  return Promise.all([...imageLoads, ...audioLoads]);
+}
+
+function waitForImageLoad(image) {
+  if (image.complete && image.naturalWidth > 0) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    const done = () => resolve();
+    image.addEventListener("load", done, { once: true });
+    image.addEventListener("error", done, { once: true });
+  });
+}
+
+function waitForAudioLoad(audio) {
+  if (audio.readyState >= 3) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    const done = () => resolve();
+    audio.addEventListener("canplaythrough", done, { once: true });
+    audio.addEventListener("loadeddata", done, { once: true });
+    audio.addEventListener("error", done, { once: true });
+    setTimeout(done, 8000);
+  });
+}
 
 function createStars(count) {
   return Array.from({ length: count }, () => ({
@@ -191,6 +234,10 @@ function hideOverlay() {
 }
 
 function resetGame() {
+  if (!assetsReady) {
+    return;
+  }
+
   state.running = true;
   state.gameOver = false;
   state.lastTime = 0;
@@ -1461,21 +1508,11 @@ function distanceBetween(a, b) {
 }
 
 function playDashHitAudio() {
-  dashHitAudio.pause();
-  dashHitAudio.currentTime = 0;
-  const playPromise = dashHitAudio.play();
-  if (playPromise && typeof playPromise.catch === "function") {
-    playPromise.catch(() => {});
-  }
+  playEffectAudio(dashHitAudio);
 }
 
 function playRockHitAudio() {
-  rockHitAudio.pause();
-  rockHitAudio.currentTime = 0;
-  const playPromise = rockHitAudio.play();
-  if (playPromise && typeof playPromise.catch === "function") {
-    playPromise.catch(() => {});
-  }
+  playEffectAudio(rockHitAudio);
 }
 
 function playBurstFireAudio() {
@@ -1490,6 +1527,16 @@ function playBurstFireAudio() {
 function stopBurstFireAudio() {
   burstFireAudio.pause();
   burstFireAudio.currentTime = 0;
+}
+
+function playEffectAudio(audio) {
+  const clone = audio.cloneNode(true);
+  clone.volume = audio.volume;
+  clone.preload = "auto";
+  const playPromise = clone.play();
+  if (playPromise && typeof playPromise.catch === "function") {
+    playPromise.catch(() => {});
+  }
 }
 
 function setKey(event, pressed) {
