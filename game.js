@@ -37,6 +37,7 @@ const panelTitle = document.getElementById("panelTitle");
 const loseVideo = document.getElementById("loseVideo");
 const panelText = document.getElementById("panelText");
 const actionButton = document.getElementById("actionButton");
+const musicButton = document.getElementById("musicButton");
 const retryButton = document.getElementById("retryButton");
 const burstButton = document.getElementById("burstButton");
 const touchControls = document.querySelector(".touch-controls");
@@ -88,8 +89,7 @@ burstFireAudio.loop = true;
 burstFireAudio.volume = 0.88;
 
 let bgmUnlocked = false;
-let assetsReady = false;
-const startPanelText = "用方向键或 WASD 控制飞船，拾取紫色子弹后按 E 连续发射。障碍 1 扣 10 血，障碍 2 扣 25 血，爱心回复 20 血。";
+const startPanelText = "用方向键或 WASD 控制飞船，拾取储能子弹后按 E 连续发射。障碍 1 扣 10 血，障碍 2 扣 25 血，爱心回复 20 血。";
 
 const state = {
   running: false,
@@ -161,21 +161,13 @@ const state = {
 };
 
 bestEl.textContent = state.best;
-showOverlay("Survival Run", "准备起飞", startPanelText, "加载中...");
-actionButton.disabled = true;
-preloadAssets().then(() => {
-  assetsReady = true;
-  if (!state.running) {
-    actionButton.disabled = false;
-    actionButton.textContent = "开始游戏";
-    panelText.textContent = startPanelText;
-  }
-});
+showOverlay("Survival Run", "准备起飞", startPanelText, "开始游戏");
+preloadAssets();
 
 function preloadAssets() {
   const imageLoads = [playerImage, rockImage, dasherImage, spinnerImage, bossImage].map(waitForImageLoad);
   const audioLoads = [rockHitAudio, dashHitAudio].map(waitForAudioLoad);
-  return Promise.all([...imageLoads, ...audioLoads]);
+  Promise.all([...imageLoads, ...audioLoads]).catch(() => {});
 }
 
 function waitForImageLoad(image) {
@@ -234,10 +226,6 @@ function hideOverlay() {
 }
 
 function resetGame() {
-  if (!assetsReady) {
-    return;
-  }
-
   bgmUnlocked = false;
   playBackgroundMusic();
 
@@ -291,7 +279,6 @@ function resetGame() {
   dashHitAudio.pause();
   dashHitAudio.currentTime = 0;
   stopBurstFireAudio();
-  playBackgroundMusic();
   updateHud();
   hideOverlay();
 }
@@ -301,15 +288,31 @@ function playBackgroundMusic() {
     return;
   }
 
-  bgmAudio.load();
   const playPromise = bgmAudio.play();
   if (playPromise && typeof playPromise.catch === "function") {
     playPromise.then(() => {
       bgmUnlocked = true;
+      if (musicButton) {
+        musicButton.textContent = "关闭音乐";
+      }
     }).catch(() => {});
   } else {
     bgmUnlocked = true;
+    if (musicButton) {
+      musicButton.textContent = "关闭音乐";
+    }
   }
+}
+
+function toggleBackgroundMusic() {
+  if (!bgmAudio.paused) {
+    bgmAudio.pause();
+    musicButton.textContent = "开启音乐";
+    return;
+  }
+
+  playBackgroundMusic();
+  musicButton.textContent = "关闭音乐";
 }
 
 function updateHud() {
@@ -1579,6 +1582,7 @@ document.addEventListener("keyup", (event) => {
 });
 
 actionButton.addEventListener("click", resetGame);
+musicButton.addEventListener("click", toggleBackgroundMusic);
 retryButton.addEventListener("click", resetGame);
 
 if (touchControls) {
