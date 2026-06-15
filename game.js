@@ -87,6 +87,8 @@ burstFireAudio.preload = "auto";
 burstFireAudio.loop = true;
 burstFireAudio.volume = 0.88;
 
+let bgmUnlocked = false;
+
 const state = {
   running: false,
   gameOver: false,
@@ -245,9 +247,17 @@ function resetGame() {
 }
 
 function playBackgroundMusic() {
+  if (bgmUnlocked && !bgmAudio.paused) {
+    return;
+  }
+
   const playPromise = bgmAudio.play();
   if (playPromise && typeof playPromise.catch === "function") {
-    playPromise.catch(() => {});
+    playPromise.then(() => {
+      bgmUnlocked = true;
+    }).catch(() => {});
+  } else {
+    bgmUnlocked = true;
   }
 }
 
@@ -1594,6 +1604,13 @@ document.addEventListener("selectstart", (event) => {
     event.preventDefault();
   }
 });
+
+const unlockBackgroundMusic = () => {
+  playBackgroundMusic();
+};
+
+document.addEventListener("pointerdown", unlockBackgroundMusic, { once: true });
+document.addEventListener("keydown", unlockBackgroundMusic, { once: true });
 
 updateHud();
 
