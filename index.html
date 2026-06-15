@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文轩冲刺</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="game-shell">
+    <section class="hud-card">
+      <div>
+        <p class="eyebrow">Arcade Mini Game</p>
+        <h1>文轩冲刺</h1>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <span class="label">得分</span>
+          <strong id="score">0</strong>
+        </div>
+        <div class="stat">
+          <span class="label">生命</span>
+          <strong id="health">100</strong>
+          <div class="health-bar" aria-label="生命值">
+            <div class="health-fill" id="healthFill"></div>
+          </div>
+        </div>
+        <div class="stat">
+          <span class="label">纪录</span>
+          <strong id="best">0</strong>
+        </div>
+        <div class="stat">
+          <span class="label">连击</span>
+          <strong id="combo">x1.0</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="playfield-card">
+      <canvas id="game" width="800" height="520" aria-label="文轩冲刺游戏画面"></canvas>
+
+      <div class="overlay" id="overlay">
+        <div class="panel">
+          <p class="eyebrow" id="panelTag">Survival Run</p>
+          <p class="lose-banner hidden" id="loseBanner">YOU LOSE</p>
+          <h2 id="panelTitle">准备起飞</h2>
+          <video class="lose-video hidden" id="loseVideo" src="assets/lose.mp4" playsinline preload="metadata" controls></video>
+          <p id="panelText">用方向键或 WASD 控制飞船，避开障碍并收集能量。拾取储能子弹后按 E 可连续射击。</p>
+          <div class="panel-actions">
+            <button id="actionButton" type="button">开始游戏</button>
+            <button class="secondary-button hidden" id="retryButton" type="button">重新挑战</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="touch-controls" aria-label="触屏控制区">
+      <button class="touch-btn touch-btn-up" data-dir="up" type="button">▲</button>
+      <button class="touch-btn touch-skill-btn" id="burstButton" data-action="burst" type="button">E</button>
+      <button class="touch-btn touch-btn-left" data-dir="left" type="button">◀</button>
+      <button class="touch-btn touch-btn-down" data-dir="down" type="button">▼</button>
+      <button class="touch-btn touch-btn-right" data-dir="right" type="button">▶</button>
+    </section>
+
+    <section class="info-card">
+      <div>
+        <h3>操作</h3>
+        <p>键盘：方向键 / WASD</p>
+        <p>手机：按住方向键移动，点击 E 技能释放连发</p>
+      </div>
+      <div>
+        <h3>规则</h3>
+        <p>活得越久分数越高，收集能量星可以回血，拾取储能子弹可以触发 E 技能。</p>
+        <p>每隔一段时间敌人与弹幕都会增强，尽量撑到最后。</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,358 @@
+:root {
+  --bg-top: #08111f;
+  --bg-bottom: #152d3f;
+  --panel: rgba(7, 18, 31, 0.76);
+  --panel-border: rgba(142, 214, 255, 0.24);
+  --accent: #7ce7ff;
+  --accent-strong: #ffc857;
+  --text: #f6fbff;
+  --muted: #a7bbca;
+  --danger: #ff6b6b;
+  --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Trebuchet MS", "Verdana", sans-serif;
+  color: var(--text);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  background:
+    radial-gradient(circle at top, rgba(124, 231, 255, 0.22), transparent 32%),
+    radial-gradient(circle at 20% 20%, rgba(255, 200, 87, 0.12), transparent 20%),
+    linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+}
+
+.game-shell {
+  width: min(1100px, calc(100vw - 24px));
+  margin: 0 auto;
+  padding: 24px 0 28px;
+}
+
+.hud-card,
+.playfield-card,
+.info-card,
+.touch-controls {
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  backdrop-filter: blur(14px);
+  box-shadow: var(--shadow);
+}
+
+.hud-card,
+.info-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 20px;
+  border-radius: 24px;
+}
+
+.hud-card {
+  margin-bottom: 18px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.72rem;
+  color: var(--accent);
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: "Georgia", "Times New Roman", serif;
+  font-weight: 700;
+}
+
+h1 {
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+.stats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  min-width: 96px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.health-bar {
+  width: 132px;
+  height: 10px;
+  margin-top: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.health-fill {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ff5f6d, #ffc371);
+  box-shadow: 0 0 16px rgba(255, 95, 109, 0.35);
+  transition: width 120ms linear, background 120ms linear;
+}
+
+.playfield-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 30px;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(124, 231, 255, 0.12), transparent 45%),
+    linear-gradient(180deg, #07111d 0%, #091827 55%, #11263d 100%);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(4, 10, 17, 0.5);
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.panel {
+  width: min(460px, 100%);
+  padding: 28px;
+  border-radius: 24px;
+  background: rgba(6, 14, 26, 0.88);
+  border: 1px solid rgba(124, 231, 255, 0.22);
+  text-align: center;
+  max-height: min(88vh, 760px);
+  overflow-y: auto;
+}
+
+.panel p {
+  margin: 12px 0 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.lose-banner {
+  margin: 10px 0 0;
+  font-family: "Georgia", "Times New Roman", serif;
+  font-size: clamp(1.5rem, 5vw, 2.8rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #fff4f4;
+  text-shadow:
+    0 0 12px rgba(255, 107, 107, 0.9),
+    0 0 36px rgba(255, 107, 107, 0.5);
+}
+
+.lose-video {
+  width: 100%;
+  max-height: 220px;
+  margin-top: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #000;
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.35);
+  object-fit: cover;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+}
+
+#actionButton {
+  margin-top: 22px;
+  padding: 12px 22px;
+  border-radius: 999px;
+  color: #0c1822;
+  background: linear-gradient(135deg, var(--accent), #c6fbff);
+  font: inherit;
+  font-weight: 700;
+}
+
+.panel-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.panel-actions button {
+  padding: 12px 22px;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 700;
+}
+
+#actionButton {
+  margin-top: 0;
+}
+
+.secondary-button {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(124, 231, 255, 0.28);
+}
+
+.info-card {
+  margin-top: 18px;
+}
+
+.info-card p {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+.touch-controls {
+  display: none;
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 24px;
+  grid-template-columns: repeat(3, 72px);
+  grid-template-rows: repeat(2, 72px);
+  justify-content: center;
+  gap: 14px;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+}
+
+.touch-btn {
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  font-size: 1.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-btn-up {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.touch-btn-down {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.touch-btn-left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.touch-btn-right {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.touch-skill-btn {
+  grid-column: 3;
+  grid-row: 1;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: linear-gradient(135deg, rgba(255, 200, 87, 0.28), rgba(124, 231, 255, 0.2));
+}
+
+.touch-skill-btn.ready {
+  box-shadow: 0 0 0 1px rgba(255, 200, 87, 0.42), 0 0 18px rgba(255, 200, 87, 0.24);
+}
+
+.touch-skill-btn:disabled {
+  opacity: 0.5;
+}
+
+.touch-btn:active {
+  transform: scale(0.97);
+  background: rgba(124, 231, 255, 0.22);
+}
+
+@media (max-width: 900px) {
+  .hud-card,
+  .info-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .stats {
+    width: 100%;
+  }
+
+  .stat {
+    flex: 1 1 110px;
+  }
+}
+
+@media (max-width: 768px) {
+  .game-shell {
+    width: min(100vw - 16px, 900px);
+    padding-top: 12px;
+  }
+
+  .touch-controls {
+    display: grid;
+  }
+
+  .panel {
+    padding: 20px;
+  }
+
+  .lose-video {
+    max-height: 168px;
+  }
+}
