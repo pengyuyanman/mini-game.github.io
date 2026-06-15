@@ -83,7 +83,7 @@ dashHitAudio.volume = 0.9;
 bgmAudio.preload = "auto";
 bgmAudio.loop = true;
 bgmAudio.volume = 0.55;
-burstFireAudio.preload = "auto";
+burstFireAudio.preload = "metadata";
 burstFireAudio.loop = true;
 burstFireAudio.volume = 0.88;
 
@@ -174,7 +174,7 @@ preloadAssets().then(() => {
 
 function preloadAssets() {
   const imageLoads = [playerImage, rockImage, dasherImage, spinnerImage, bossImage].map(waitForImageLoad);
-  const audioLoads = [rockHitAudio, dashHitAudio, bgmAudio, burstFireAudio].map(waitForAudioLoad);
+  const audioLoads = [rockHitAudio, dashHitAudio].map(waitForAudioLoad);
   return Promise.all([...imageLoads, ...audioLoads]);
 }
 
@@ -238,6 +238,9 @@ function resetGame() {
     return;
   }
 
+  bgmUnlocked = false;
+  playBackgroundMusic();
+
   state.running = true;
   state.gameOver = false;
   state.lastTime = 0;
@@ -298,6 +301,7 @@ function playBackgroundMusic() {
     return;
   }
 
+  bgmAudio.load();
   const playPromise = bgmAudio.play();
   if (playPromise && typeof playPromise.catch === "function") {
     playPromise.then(() => {
