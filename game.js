@@ -38,7 +38,6 @@ const loseVideo = document.getElementById("loseVideo");
 const panelText = document.getElementById("panelText");
 const actionButton = document.getElementById("actionButton");
 const musicButton = document.getElementById("musicButton");
-const musicButton2 = document.getElementById("musicButton2");
 const retryButton = document.getElementById("retryButton");
 const loadStatusEl = document.getElementById("loadStatus");
 const audioStatusEl = document.getElementById("audioStatus");
@@ -52,7 +51,6 @@ const bossImage = new Image();
 const rockHitAudio = new Audio("assets/rock-hit.mp3");
 const dashHitAudio = new Audio("assets/dash-hit.mp3");
 const bgmAudio = new Audio("assets/bgm.mp3");
-const bgmAudio2 = new Audio("assets/bgm2-small.mp3");
 const burstFireAudio = new Audio("assets/burst-fire.mp3");
 
 let playerImageReady = false;
@@ -88,9 +86,6 @@ dashHitAudio.volume = 0.9;
 bgmAudio.preload = "auto";
 bgmAudio.loop = true;
 bgmAudio.volume = 0.55;
-bgmAudio2.preload = "auto";
-bgmAudio2.loop = true;
-bgmAudio2.volume = 0.55;
 burstFireAudio.preload = "auto";
 burstFireAudio.loop = true;
 burstFireAudio.volume = 0.88;
@@ -187,7 +182,6 @@ function preloadAssets() {
     [rockHitAudio, "rock-hit.mp3"],
     [dashHitAudio, "dash-hit.mp3"],
     [bgmAudio, "bgm.mp3"],
-    [bgmAudio2, "bgm2.mp3"],
     [burstFireAudio, "burst-fire.mp3"]
   ].map(([audio, label]) => waitForAudioLoad(audio, label));
 
@@ -243,9 +237,6 @@ function setResourceLoadingState(isLoading) {
   if (musicButton) {
     musicButton.disabled = isLoading;
   }
-  if (musicButton2) {
-    musicButton2.disabled = isLoading;
-  }
   if (loadStatusEl) {
     loadStatusEl.textContent = isLoading ? "资源加载中，请稍候。" : "资源已就绪。";
     loadStatusEl.classList.toggle("hidden", false);
@@ -276,6 +267,7 @@ function showOverlay(tag, title, text, buttonText) {
   panelText.textContent = text;
   actionButton.textContent = buttonText;
   actionButton.classList.remove("hidden");
+  musicButton.classList.remove("hidden");
   retryButton.classList.add("hidden");
   loseBanner.classList.add("hidden");
   loseVideo.classList.add("hidden");
@@ -349,25 +341,21 @@ function resetGame() {
 }
 
 function updateMusicButtons() {
-  if (!musicButton || !musicButton2) {
+  if (!musicButton) {
     return;
   }
 
   if (!activeBackgroundAudio.paused) {
-    musicButton.textContent = activeBackgroundAudio === bgmAudio ? "关闭音乐" : "开启音乐";
-    musicButton2.textContent = activeBackgroundAudio === bgmAudio2 ? "关闭音乐2" : "开启音乐2";
+    musicButton.textContent = "关闭音乐";
     return;
   }
 
   musicButton.textContent = "开启音乐";
-  musicButton2.textContent = "开启音乐2";
 }
 
 function stopBackgroundMusic() {
   bgmAudio.pause();
   bgmAudio.currentTime = 0;
-  bgmAudio2.pause();
-  bgmAudio2.currentTime = 0;
   updateMusicButtons();
 }
 
@@ -382,9 +370,6 @@ function playBackgroundMusic(audio = activeBackgroundAudio) {
     activeBackgroundAudio = audio;
   }
 
-  const otherAudio = activeBackgroundAudio === bgmAudio ? bgmAudio2 : bgmAudio;
-  otherAudio.pause();
-  otherAudio.currentTime = 0;
   activeBackgroundAudio.currentTime = 0;
 
   const playPromise = activeBackgroundAudio.play();
@@ -794,19 +779,15 @@ function endGame() {
   state.running = false;
   state.gameOver = true;
   stopBurstFireAudio();
-  panelTag.textContent = "Mission Failed";
-  loseBanner.classList.remove("hidden");
+  panelTag.textContent = "重新挑战";
+  loseBanner.classList.add("hidden");
   panelTitle.textContent = "生命耗尽";
-  loseVideo.classList.remove("hidden");
+  loseVideo.classList.add("hidden");
   panelText.textContent = `本次得分 ${Math.floor(state.score)}，最高纪录 ${state.best}。再来一局，看看你能撑多久。`;
   actionButton.classList.add("hidden");
+  musicButton.classList.add("hidden");
   retryButton.classList.remove("hidden");
   overlay.classList.remove("hidden");
-  loseVideo.currentTime = 0;
-  const playPromise = loseVideo.play();
-  if (playPromise && typeof playPromise.catch === "function") {
-    playPromise.catch(() => {});
-  }
 }
 
 function draw() {
@@ -1686,7 +1667,6 @@ document.addEventListener("keyup", (event) => {
 
 actionButton.addEventListener("click", resetGame);
 musicButton.addEventListener("click", () => toggleBackgroundMusic(bgmAudio));
-musicButton2.addEventListener("click", () => toggleBackgroundMusic(bgmAudio2));
 retryButton.addEventListener("click", resetGame);
 
 if (touchControls) {
