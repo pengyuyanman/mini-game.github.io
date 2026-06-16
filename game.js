@@ -1,7 +1,7 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-const MAX_HEALTH = 200;
+const MAX_HEALTH = 250;
 const ROCK_DAMAGE = 10;
 const DASHER_DAMAGE = 25;
 const STAR_HEAL = 20;
@@ -38,6 +38,7 @@ const loseVideo = document.getElementById("loseVideo");
 const panelText = document.getElementById("panelText");
 const actionButton = document.getElementById("actionButton");
 const musicButton = document.getElementById("musicButton");
+const musicButton2 = document.getElementById("musicButton2");
 const retryButton = document.getElementById("retryButton");
 const burstButton = document.getElementById("burstButton");
 const touchControls = document.querySelector(".touch-controls");
@@ -49,6 +50,7 @@ const bossImage = new Image();
 const rockHitAudio = new Audio("assets/rock-hit.mp3");
 const dashHitAudio = new Audio("assets/dash-hit.mp3");
 const bgmAudio = new Audio("assets/bgm.mp3");
+const bgmAudio2 = new Audio("assets/bgm2.mp3");
 const burstFireAudio = new Audio("assets/burst-fire.mp3");
 
 let playerImageReady = false;
@@ -84,11 +86,15 @@ dashHitAudio.volume = 0.9;
 bgmAudio.preload = "auto";
 bgmAudio.loop = true;
 bgmAudio.volume = 0.55;
+bgmAudio2.preload = "auto";
+bgmAudio2.loop = true;
+bgmAudio2.volume = 0.55;
 burstFireAudio.preload = "metadata";
 burstFireAudio.loop = true;
 burstFireAudio.volume = 0.88;
 
 let bgmUnlocked = false;
+let activeBackgroundAudio = bgmAudio;
 const startPanelText = "用方向键或 WASD 控制罗周杰快跑，拾取储能子弹后按 E 连续发射。障碍 1 扣 10 血，障碍 2 扣 25 血，爱心回复 20 血。";
 
 const state = {
@@ -283,36 +289,65 @@ function resetGame() {
   hideOverlay();
 }
 
-function playBackgroundMusic() {
-  if (bgmUnlocked && !bgmAudio.paused) {
+function updateMusicButtons() {
+  if (!musicButton || !musicButton2) {
     return;
   }
 
-  const playPromise = bgmAudio.play();
+  if (!activeBackgroundAudio.paused) {
+    musicButton.textContent = activeBackgroundAudio === bgmAudio ? "关闭音乐" : "开启音乐";
+    musicButton2.textContent = activeBackgroundAudio === bgmAudio2 ? "关闭音乐2" : "开启音乐2";
+    return;
+  }
+
+  musicButton.textContent = "开启音乐";
+  musicButton2.textContent = "开启音乐2";
+}
+
+function stopBackgroundMusic() {
+  bgmAudio.pause();
+  bgmAudio.currentTime = 0;
+  bgmAudio2.pause();
+  bgmAudio2.currentTime = 0;
+  updateMusicButtons();
+}
+
+function playBackgroundMusic(audio = activeBackgroundAudio) {
+  if (bgmUnlocked && activeBackgroundAudio === audio && !audio.paused) {
+    return;
+  }
+
+  if (activeBackgroundAudio !== audio) {
+    activeBackgroundAudio.pause();
+    activeBackgroundAudio.currentTime = 0;
+    activeBackgroundAudio = audio;
+  }
+
+  const otherAudio = activeBackgroundAudio === bgmAudio ? bgmAudio2 : bgmAudio;
+  otherAudio.pause();
+  otherAudio.currentTime = 0;
+  activeBackgroundAudio.currentTime = 0;
+
+  const playPromise = activeBackgroundAudio.play();
   if (playPromise && typeof playPromise.catch === "function") {
     playPromise.then(() => {
       bgmUnlocked = true;
-      if (musicButton) {
-        musicButton.textContent = "关闭音乐";
-      }
+      updateMusicButtons();
     }).catch(() => {});
   } else {
     bgmUnlocked = true;
-    if (musicButton) {
-      musicButton.textContent = "关闭音乐";
-    }
+    updateMusicButtons();
   }
 }
 
-function toggleBackgroundMusic() {
-  if (!bgmAudio.paused) {
-    bgmAudio.pause();
-    musicButton.textContent = "开启音乐";
+function toggleBackgroundMusic(audio = bgmAudio) {
+  if (activeBackgroundAudio === audio && !audio.paused) {
+    stopBackgroundMusic();
     return;
   }
 
-  playBackgroundMusic();
-  musicButton.textContent = "关闭音乐";
+  playBackgroundMusic(audio);
+  updateMusicButtons();
 }
 
 function updateHud() {
@@ -1582,7 +1617,8 @@ document.addEventListener("keyup", (event) => {
 });
 
 actionButton.addEventListener("click", resetGame);
-musicButton.addEventListener("click", toggleBackgroundMusic);
+musicButton.addEventListener("click", () => toggleBackgroundMusic(bgmAudio));
+musicButton2.addEventListener("click", () => toggleBackgroundMusic(bgmAudio2));
 retryButton.addEventListener("click", resetGame);
 
 if (touchControls) {
