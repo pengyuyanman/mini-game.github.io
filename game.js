@@ -39,8 +39,6 @@ const panelText = document.getElementById("panelText");
 const actionButton = document.getElementById("actionButton");
 const musicButton = document.getElementById("musicButton");
 const retryButton = document.getElementById("retryButton");
-const loadStatusEl = document.getElementById("loadStatus");
-const audioStatusEl = document.getElementById("audioStatus");
 const burstButton = document.getElementById("burstButton");
 const touchControls = document.querySelector(".touch-controls");
 const playerImage = new Image();
@@ -92,8 +90,6 @@ burstFireAudio.volume = 0.88;
 
 let bgmUnlocked = false;
 let activeBackgroundAudio = bgmAudio;
-let resourcesReady = false;
-let resourceErrorCount = 0;
 const startPanelText = "用方向键或 WASD 控制罗周杰快跑，拾取储能子弹后按 E 连续发射。障碍 1 扣 10 血，障碍 2 扣 25 血，爱心回复 20 血。";
 
 const state = {
@@ -167,90 +163,6 @@ const state = {
 
 bestEl.textContent = state.best;
 showOverlay("罗周杰快跑", "准备起飞", startPanelText, "开始游戏");
-preloadAssets();
-setResourceLoadingState(true);
-
-function preloadAssets() {
-  const imageLoads = [
-    [playerImage, "player.png"],
-    [rockImage, "rock.jpg"],
-    [dasherImage, "dasher.jpg"],
-    [spinnerImage, "spinner.jpg"],
-    [bossImage, "boss.jpg"]
-  ].map(([image, label]) => waitForImageLoad(image, label));
-  const audioLoads = [
-    [rockHitAudio, "rock-hit.mp3"],
-    [dashHitAudio, "dash-hit.mp3"],
-    [bgmAudio, "bgm.mp3"],
-    [burstFireAudio, "burst-fire.mp3"]
-  ].map(([audio, label]) => waitForAudioLoad(audio, label));
-
-  Promise.all([...imageLoads, ...audioLoads]).then(() => {
-    resourcesReady = true;
-    setResourceLoadingState(false);
-    setAudioStatus("");
-    updateMusicButtons();
-  }).catch(() => {
-    resourcesReady = true;
-    setResourceLoadingState(false);
-    updateMusicButtons();
-  });
-}
-
-function waitForImageLoad(image, label) {
-  if (image.complete && image.naturalWidth > 0) {
-    return Promise.resolve();
-  }
-
-  return new Promise((resolve) => {
-    const done = () => resolve();
-    image.addEventListener("load", done, { once: true });
-    image.addEventListener("error", () => {
-      noteResourceError(`图片加载失败：${label}`);
-      done();
-    }, { once: true });
-  });
-}
-
-function waitForAudioLoad(audio, label) {
-  if (audio.readyState >= 3) {
-    return Promise.resolve();
-  }
-
-  return new Promise((resolve) => {
-    const done = () => resolve();
-    audio.addEventListener("canplaythrough", done, { once: true });
-    audio.addEventListener("loadeddata", done, { once: true });
-    audio.addEventListener("error", () => {
-      noteResourceError(`音频加载失败：${label}`);
-      done();
-    }, { once: true });
-    setTimeout(done, 15000);
-  });
-}
-
-function setResourceLoadingState(isLoading) {
-  if (actionButton) {
-    actionButton.disabled = isLoading;
-    actionButton.textContent = isLoading ? "加载中..." : "开始游戏";
-  }
-  if (musicButton) {
-    musicButton.disabled = isLoading;
-  }
-  if (loadStatusEl) {
-    loadStatusEl.textContent = isLoading ? "资源加载中，请稍候。" : "资源已就绪。";
-    loadStatusEl.classList.toggle("hidden", false);
-  }
-}
-
-function noteResourceError(message) {
-  resourceErrorCount += 1;
-  if (audioStatusEl) {
-    audioStatusEl.textContent = message;
-    audioStatusEl.classList.remove("hidden");
-    audioStatusEl.classList.add("error");
-  }
-}
 
 function createStars(count) {
   return Array.from({ length: count }, () => ({
