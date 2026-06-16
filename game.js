@@ -40,6 +40,8 @@ const actionButton = document.getElementById("actionButton");
 const musicButton = document.getElementById("musicButton");
 const musicButton2 = document.getElementById("musicButton2");
 const retryButton = document.getElementById("retryButton");
+const loadStatusEl = document.getElementById("loadStatus");
+const audioStatusEl = document.getElementById("audioStatus");
 const burstButton = document.getElementById("burstButton");
 const touchControls = document.querySelector(".touch-controls");
 const playerImage = new Image();
@@ -50,7 +52,7 @@ const bossImage = new Image();
 const rockHitAudio = new Audio("assets/rock-hit.mp3");
 const dashHitAudio = new Audio("assets/dash-hit.mp3");
 const bgmAudio = new Audio("assets/bgm.mp3");
-const bgmAudio2 = new Audio("assets/bgm2.mp3");
+const bgmAudio2 = new Audio("assets/bgm2-small.mp3");
 const burstFireAudio = new Audio("assets/burst-fire.mp3");
 
 let playerImageReady = false;
@@ -73,7 +75,7 @@ spinnerImage.addEventListener("load", () => {
 bossImage.addEventListener("load", () => {
   bossImageReady = true;
 });
-playerImage.src = "assets/player.jpg";
+playerImage.src = "assets/player.png";
 rockImage.src = "assets/rock.jpg";
 dasherImage.src = "assets/dasher.jpg";
 spinnerImage.src = "assets/spinner.jpg";
@@ -89,12 +91,14 @@ bgmAudio.volume = 0.55;
 bgmAudio2.preload = "auto";
 bgmAudio2.loop = true;
 bgmAudio2.volume = 0.55;
-burstFireAudio.preload = "metadata";
+burstFireAudio.preload = "auto";
 burstFireAudio.loop = true;
 burstFireAudio.volume = 0.88;
 
 let bgmUnlocked = false;
 let activeBackgroundAudio = bgmAudio;
+let resourcesReady = false;
+let resourceErrorCount = 0;
 const startPanelText = "用方向键或 WASD 控制罗周杰快跑，拾取储能子弹后按 E 连续发射。障碍 1 扣 10 血，障碍 2 扣 25 血，爱心回复 20 血。";
 
 const state = {
@@ -169,14 +173,37 @@ const state = {
 bestEl.textContent = state.best;
 showOverlay("罗周杰快跑", "准备起飞", startPanelText, "开始游戏");
 preloadAssets();
+setResourceLoadingState(true);
 
 function preloadAssets() {
-  const imageLoads = [playerImage, rockImage, dasherImage, spinnerImage, bossImage].map(waitForImageLoad);
-  const audioLoads = [rockHitAudio, dashHitAudio].map(waitForAudioLoad);
-  Promise.all([...imageLoads, ...audioLoads]).catch(() => {});
+  const imageLoads = [
+    [playerImage, "player.png"],
+    [rockImage, "rock.jpg"],
+    [dasherImage, "dasher.jpg"],
+    [spinnerImage, "spinner.jpg"],
+    [bossImage, "boss.jpg"]
+  ].map(([image, label]) => waitForImageLoad(image, label));
+  const audioLoads = [
+    [rockHitAudio, "rock-hit.mp3"],
+    [dashHitAudio, "dash-hit.mp3"],
+    [bgmAudio, "bgm.mp3"],
+    [bgmAudio2, "bgm2.mp3"],
+    [burstFireAudio, "burst-fire.mp3"]
+  ].map(([audio, label]) => waitForAudioLoad(audio, label));
+
+  Promise.all([...imageLoads, ...audioLoads]).then(() => {
+    resourcesReady = true;
+    setResourceLoadingState(false);
+    setAudioStatus("");
+    updateMusicButtons();
+  }).catch(() => {
+    resourcesReady = true;
+    setResourceLoadingState(false);
+    updateMusicButtons();
+  });
 }
 
-function waitForImageLoad(image) {
+function waitForImageLoad(image, label) {
   if (image.complete && image.naturalWidth > 0) {
     return Promise.resolve();
   }
@@ -184,11 +211,14 @@ function waitForImageLoad(image) {
   return new Promise((resolve) => {
     const done = () => resolve();
     image.addEventListener("load", done, { once: true });
-    image.addEventListener("error", done, { once: true });
+    image.addEventListener("error", () => {
+      noteResourceError(`图片加载失败：${label}`);
+      done();
+    }, { once: true });
   });
 }
 
-function waitForAudioLoad(audio) {
+function waitForAudioLoad(audio, label) {
   if (audio.readyState >= 3) {
     return Promise.resolve();
   }
@@ -197,9 +227,38 @@ function waitForAudioLoad(audio) {
     const done = () => resolve();
     audio.addEventListener("canplaythrough", done, { once: true });
     audio.addEventListener("loadeddata", done, { once: true });
-    audio.addEventListener("error", done, { once: true });
-    setTimeout(done, 8000);
+    audio.addEventListener("error", () => {
+      noteResourceError(`音频加载失败：${label}`);
+      done();
+    }, { once: true });
+    setTimeout(done, 15000);
   });
+}
+
+function setResourceLoadingState(isLoading) {
+  if (actionButton) {
+    actionButton.disabled = isLoading;
+    actionButton.textContent = isLoading ? "加载中..." : "开始游戏";
+  }
+  if (musicButton) {
+    musicButton.disabled = isLoading;
+  }
+  if (musicButton2) {
+    musicButton2.disabled = isLoading;
+  }
+  if (loadStatusEl) {
+    loadStatusEl.textContent = isLoading ? "资源加载中，请稍候。" : "资源已就绪。";
+    loadStatusEl.classList.toggle("hidden", false);
+  }
+}
+
+function noteResourceError(message) {
+  resourceErrorCount += 1;
+  if (audioStatusEl) {
+    audioStatusEl.textContent = message;
+    audioStatusEl.classList.remove("hidden");
+    audioStatusEl.classList.add("error");
+  }
 }
 
 function createStars(count) {
@@ -333,7 +392,14 @@ function playBackgroundMusic(audio = activeBackgroundAudio) {
     playPromise.then(() => {
       bgmUnlocked = true;
       updateMusicButtons();
-    }).catch(() => {});
+      if (audioStatusEl) {
+        audioStatusEl.textContent = "";
+        audioStatusEl.classList.add("hidden");
+        audioStatusEl.classList.remove("error");
+      }
+    }).catch(() => {
+      noteResourceError("背景音乐未能播放，点按钮重试。");
+    });
   } else {
     bgmUnlocked = true;
     updateMusicButtons();
@@ -1577,7 +1643,9 @@ function playEffectAudio(audio) {
   clone.preload = "auto";
   const playPromise = clone.play();
   if (playPromise && typeof playPromise.catch === "function") {
-    playPromise.catch(() => {});
+    playPromise.catch(() => {
+      noteResourceError("部分音效未能播放。");
+    });
   }
 }
 
