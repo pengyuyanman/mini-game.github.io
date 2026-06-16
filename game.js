@@ -89,7 +89,7 @@ burstFireAudio.loop = true;
 burstFireAudio.volume = 0.88;
 
 let bgmUnlocked = false;
-const startPanelText = "用方向键或 WASD 控制飞船，拾取储能子弹后按 E 连续发射。障碍 1 扣 10 血，障碍 2 扣 25 血，爱心回复 20 血。";
+const startPanelText = "用方向键或 WASD 控制罗周杰快跑，拾取储能子弹后按 E 连续发射。障碍 1 扣 10 血，障碍 2 扣 25 血，爱心回复 20 血。";
 
 const state = {
   running: false,
@@ -102,7 +102,7 @@ const state = {
   dashTimer: 0,
   flashTimer: 0,
   difficultyStep: 0,
-  best: Number(localStorage.getItem("starport-best") || 0),
+  best: Number(localStorage.getItem("luozhoujie-kuaipao-best") || 0),
   score: 0,
   health: MAX_HEALTH,
   comboTimer: 0,
@@ -161,7 +161,7 @@ const state = {
 };
 
 bestEl.textContent = state.best;
-showOverlay("Survival Run", "准备起飞", startPanelText, "开始游戏");
+showOverlay("罗周杰快跑", "准备起飞", startPanelText, "开始游戏");
 preloadAssets();
 
 function preloadAssets() {
@@ -666,7 +666,7 @@ function update(delta) {
 
   if (state.score > state.best) {
     state.best = Math.floor(state.score);
-    localStorage.setItem("starport-best", String(state.best));
+    localStorage.setItem("luozhoujie-kuaipao-best", String(state.best));
   }
 
   updateHud();
